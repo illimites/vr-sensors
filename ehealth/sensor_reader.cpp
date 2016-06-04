@@ -5,54 +5,17 @@
 #include <sstream>
 #include <sys/time.h>
 #include <time.h>
+#include <cassert>
+
+#include "measurement.h"
 
 using namespace std;
-
-
-struct SensorReadings {
-    timespec timestamp;
-    int      bpm;
-    float    ecg;
-    float    conductance_voltage;
-};
 
 
 struct Settings {
     int    measurement_interval;
     string log_path;
 };
-
-
-void pulsioximeter_interrupt_handler() {
-    static int run_count = 0;
-
-    ++run_count;
-
-    // Read only once per 50 calls to reduce the latency.
-    // That's what eHealth examples do.
-    if (run_count == 50) {
-        eHealth.readPulsioximeter();
-        run_count = 0;
-    }
-}
-
-
-void setup_sensors() {
-    eHealth.initPulsioximeter();
-    attachInterrupt(6, pulsioximeter_interrupt_handler, RISING);
-}
-
-
-SensorReadings read_sensors() {
-    SensorReadings readings;
-
-    clock_gettime(CLOCK_MONOTONIC, &readings.timestamp);
-    readings.bpm                 = eHealth.getBPM();
-    readings.ecg                 = eHealth.getECG();
-    readings.conductance_voltage = eHealth.getSkinConductanceVoltage();
-
-    return readings;
-}
 
 
 void print_readings(const SensorReadings & readings) {
@@ -65,9 +28,9 @@ void print_readings(const SensorReadings & readings) {
 
 
 void log_header(ofstream & log) {
-    log << "timestamp" << ", ";
-    log << "PRbpm"     << ", ";
-    log << "ECG"       << ", ";
+    log << "timestamp"       << ", ";
+    log << "PRbpm"           << ", ";
+    log << "ECG"             << ", ";
     log << "Skin conductance voltage";
     log << endl;
 }

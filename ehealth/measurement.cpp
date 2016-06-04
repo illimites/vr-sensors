@@ -1,0 +1,169 @@
+#include <arduPi.h>
+#include <eHealth.h>
+#include <cassert>
+
+#include "measurement.h"
+
+static int pulsioximeter_bpm;
+static int pulsioximeter_oxygen_saturation;
+
+int digits_to_int(int hundreds, int tens, int units);
+
+
+SensorReadings read_sensors() {
+    SensorReadings readings;
+
+    clock_gettime(CLOCK_MONOTONIC, &readings.timestamp);
+    readings.bpm                 = pulsioximeter_bpm;
+    readings.ecg                 = get_ecg();
+    readings.conductance_voltage = get_skin_conductance_voltage();
+
+    return readings;
+}
+
+
+void pulsioximeter_interrupt_handler() {
+    static int run_count = 0;
+
+    ++run_count;
+
+    // Read only once per 50 calls to reduce the latency.
+    // That's what eHealth examples do.
+    if (run_count == 50) {
+        update_pulsioximeter_globals();
+        run_count = 0;
+    }
+}
+
+
+void setup_sensors() {
+    eHealth.initPulsioximeter();
+    attachInterrupt(6, pulsioximeter_interrupt_handler, RISING);
+}
+
+
+int8_t segToNumber(uint8_t A, uint8_t B, uint8_t C, uint8_t D, uint8_t E, uint8_t F, uint8_t G)
+{
+    // This function is based on eHealthClass::segToNumber from eHealth.cpp.
+
+    if        ((A == 1) && (B == 1) && (C == 1) && (D == 0) && (E == 1) && (F == 1) && (G == 1)) {
+        return 0;
+    } else if ((A == 0) && (B == 1) && (C == 0) && (D == 0) && (E == 1) && (F == 0) && (G == 0)) {
+        return 1;
+    } else if ((A == 1) && (B == 1) && (C == 0) && (D == 1) && (E == 0) && (F == 1) && (G == 1)) {
+        return 2;
+    } else if ((A == 1) && (B == 1) && (C == 0) && (D == 1) && (E == 1) && (F == 0) && (G == 1)) {
+        return 3;
+    } else if ((A == 0) && (B == 1) && (C == 1) && (D == 1) && (E == 1) && (F == 0) && (G == 0)) {
+        return 4;
+    } else if ((A == 1) && (B == 0) && (C == 1) && (D == 1) && (E == 1) && (F == 0) && (G == 1)) {
+        return 5;
+    } else if ((A == 1) && (B == 0) && (C == 1) && (D == 1) && (E == 1) && (F == 1) && (G == 1)) {
+        return 6;
+    } else if ((A == 1) && (B == 1) && (C == 0) && (D == 0) && (E == 1) && (F == 0) && (G == 0)) {
+        return 7;
+    } else if ((A == 1) && (B == 1) && (C == 1) && (D == 1) && (E == 1) && (F == 1) && (G == 1)) {
+        return 8;
+    } else if ((A == 1) && (B == 1) && (C == 1) && (D == 1) && (E == 1) && (F == 0) && (G == 1)) {
+        return 9;
+    } else  {
+        return -1;
+    }
+}
+
+
+int digits_to_int(int hundreds, int tens, int units) {
+    assert(0 <= hundreds < 10 || hundreds == -1);
+    assert(0 <= tens     < 10 || tens     == -1);
+    assert(0 <= units    < 10 || units    == -1);
+
+    // If any of the digits could not be properly decoded, return -1.
+    // Don't do anything stupid like assuming that the digit was zero. Don't make things up.
+    if (hundreds == -1 || tens == -1 || units == -1)
+        return -1;
+
+    return hundreds * 100 + tens * 10 + units;
+}
+
+
+void update_pulsioximeter_globals()
+{
+    // This function is based on eHealthClass::readPulsioximeter() from eHealth.cpp.
+
+    int8_t  digito[200];
+    uint8_t A = 0;
+    uint8_t B = 0;
+    uint8_t C = 0;
+    uint8_t D = 0;
+    uint8_t E = 0;
+    uint8_t F = 0;
+    uint8_t G = 0;
+
+    // Read LED all segments of pulsioximeter display.
+    // What a roundabout way to communicate...
+    for (int i = 0; i < 199 ; i++) {
+        A = !digitalRead(13);
+        B = !digitalRead(12);
+        C = !digitalRead(11);
+        D = !digitalRead(10);
+        E = !digitalRead(9);
+        F = !digitalRead(8);
+        G = !digitalRead(7);
+
+        digito[i] = segToNumber(A, B, C, D, E, F, G);
+
+        delayMicroseconds(43);
+    }
+
+    if (digito[142] != 0 && digito[181] == 0) {
+        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[142], digito[59]);
+        pulsioximeter_bpm               = digits_to_int(digito[137], digito[10], digito[2]);
+    }
+    else if (digito[136] != 0 && digito[62] == 0) {
+        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[179], digito[136]);
+        pulsioximeter_bpm               = digits_to_int(digito[127], digito[10], digito[2]);
+    }
+    else if (digito[145] != 0 && digito[62] == 0) {
+        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[181], digito[142]);
+        pulsioximeter_bpm               = digits_to_int(digito[50], digito[10], digito[2]);
+    }
+    else if (digito[53] != 0 && digito[62] == 0) {
+        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[179], digito[53]);
+        pulsioximeter_bpm               = digits_to_int(digito[41], digito[10], digito[2]);
+    }
+    else if (digito[174] != 0 && digito[181] == 0) {
+        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[179], digito[59]);
+        pulsioximeter_bpm               = digits_to_int(digito[50], digito[10], digito[2]);
+    }
+    else {
+        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[179], digito[59]);
+        pulsioximeter_bpm               = digits_to_int(digito[50], digito[10], digito[2]);
+    }
+}
+
+
+float get_ecg()
+{
+    // This function is based on eHealthClass::getECG() from eHealth.cpp.
+
+    // binary to voltage conversion
+    return (float)analogRead(0) * 5 / 1023.0;
+}
+
+
+float get_skin_conductance_voltage()
+{
+    // This function is based on eHealthClass::getSkinConductance() from eHealth.cpp.
+
+    // getSkinConductance() has delays of 2 ms both before and after reading the analog input.
+    // And no comments saying why it's waiting. If they were somewhere in between calls I'd say that
+    // we have to wait to get the data ready or something. But there was delay before the function
+    // even does anything! What was the point? We already have the delay in the main loop. Pointless
+    // delays here don't let us do other measurements in parallel.
+
+    // Read from analog pin 2 and convert to voltage
+    int   sensorValue = analogRead(2);
+    float voltage     = (sensorValue * 5.0) / 1023;
+
+    return voltage;
+}

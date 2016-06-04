@@ -21,7 +21,7 @@ all: $(PROGRAMS)
 
 examples: $(EXAMPLES)
 
-$(BIN_DIR)/sensor_reader: $(ARDUPI_DIR)/arduPi.o $(EHEALTH_DIR)/eHealth.o sensor_reader.o
+$(BIN_DIR)/sensor_reader: $(ARDUPI_DIR)/arduPi.o $(EHEALTH_DIR)/eHealth.o measurement.o sensor_reader.o
 	mkdir -p $(BIN_DIR)
 	g++ -o $@ $^ -L "$(BCM_DIR)/src" -l bcm2835 -l rt -lpthread $(CPP_FLAGS)
 
