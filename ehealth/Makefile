@@ -13,12 +13,19 @@ ARDUPI_URL  = https://www.cooking-hacks.com/media/cooking/images/documentation/r
 CPP_FLAGS = -fpermissive
 
 PROGRAMS = $(BIN_DIR)/sensor_reader
+EXAMPLES = $(BIN_DIR)/ecg $(BIN_DIR)/galvanic $(BIN_DIR)/pulsioximeter
 
-.PHONY: clean distclean
+.PHONY: clean distclean examples
 
 all: $(PROGRAMS)
 
+examples: $(EXAMPLES)
+
 $(BIN_DIR)/sensor_reader: $(ARDUPI_DIR)/arduPi.o $(EHEALTH_DIR)/eHealth.o sensor_reader.o
+	mkdir -p $(BIN_DIR)
+	g++ -o $@ $^ -L "$(BCM_DIR)/src" -l bcm2835 -l rt -lpthread $(CPP_FLAGS)
+
+$(EXAMPLES): $(BIN_DIR)/%: $(ARDUPI_DIR)/arduPi.o $(EHEALTH_DIR)/eHealth.o $(EHEALTH_DIR)/examples/%.o
 	mkdir -p $(BIN_DIR)
 	g++ -o $@ $^ -L "$(BCM_DIR)/src" -l bcm2835 -l rt -lpthread $(CPP_FLAGS)
 
