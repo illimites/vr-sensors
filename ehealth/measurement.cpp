@@ -4,8 +4,8 @@
 
 #include "measurement.h"
 
-static int pulsioximeter_bpm;
-static int pulsioximeter_oxygen_saturation;
+static int pulsioximeter_bpm_digits[3];
+static int pulsioximeter_oxygen_saturation_digits[2];
 
 int digits_to_int(int hundreds, int tens, int units);
 
@@ -13,8 +13,15 @@ int digits_to_int(int hundreds, int tens, int units);
 SensorReadings read_sensors() {
     SensorReadings readings;
 
+    assert(0 <= pulsioximeter_bpm_digits[2] <= 9 || pulsioximeter_bpm_digits[2] == -1);
+    assert(0 <= pulsioximeter_bpm_digits[1] <= 9 || pulsioximeter_bpm_digits[1] == -1);
+    assert(0 <= pulsioximeter_bpm_digits[0] <= 9 || pulsioximeter_bpm_digits[0] == -1);
+
     clock_gettime(CLOCK_MONOTONIC, &readings.timestamp);
-    readings.bpm                 = pulsioximeter_bpm;
+    readings.bpm                 = digits_to_int(pulsioximeter_bpm_digits[2], pulsioximeter_bpm_digits[1], pulsioximeter_bpm_digits[0]);
+    readings.bpm_digits[2]       = pulsioximeter_bpm_digits[2];
+    readings.bpm_digits[1]       = pulsioximeter_bpm_digits[1];
+    readings.bpm_digits[0]       = pulsioximeter_bpm_digits[0];
     readings.ecg                 = get_ecg();
     readings.conductance_voltage = get_skin_conductance_voltage();
 
@@ -116,28 +123,46 @@ void update_pulsioximeter_globals()
     }
 
     if (digito[142] != 0 && digito[181] == 0) {
-        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[142], digito[59]);
-        pulsioximeter_bpm               = digits_to_int(digito[137], digito[10], digito[2]);
+        pulsioximeter_oxygen_saturation_digits[1] = digito[142];
+        pulsioximeter_oxygen_saturation_digits[0] = digito[59];
+        pulsioximeter_bpm_digits[2]               = digito[137];
+        pulsioximeter_bpm_digits[1]               = digito[10];
+        pulsioximeter_bpm_digits[0]               = digito[2];
     }
     else if (digito[136] != 0 && digito[62] == 0) {
-        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[179], digito[136]);
-        pulsioximeter_bpm               = digits_to_int(digito[127], digito[10], digito[2]);
+        pulsioximeter_oxygen_saturation_digits[1] = digito[179];
+        pulsioximeter_oxygen_saturation_digits[0] = digito[136];
+        pulsioximeter_bpm_digits[2]               = digito[127];
+        pulsioximeter_bpm_digits[1]               = digito[10];
+        pulsioximeter_bpm_digits[0]               = digito[2];
     }
     else if (digito[145] != 0 && digito[62] == 0) {
-        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[181], digito[142]);
-        pulsioximeter_bpm               = digits_to_int(digito[50], digito[10], digito[2]);
+        pulsioximeter_oxygen_saturation_digits[1] = digito[181];
+        pulsioximeter_oxygen_saturation_digits[0] = digito[142];
+        pulsioximeter_bpm_digits[2]               = digito[50];
+        pulsioximeter_bpm_digits[1]               = digito[10];
+        pulsioximeter_bpm_digits[0]               = digito[2];
     }
     else if (digito[53] != 0 && digito[62] == 0) {
-        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[179], digito[53]);
-        pulsioximeter_bpm               = digits_to_int(digito[41], digito[10], digito[2]);
+        pulsioximeter_oxygen_saturation_digits[1] = digito[179];
+        pulsioximeter_oxygen_saturation_digits[0] = digito[53];
+        pulsioximeter_bpm_digits[2]               = digito[41];
+        pulsioximeter_bpm_digits[1]               = digito[10];
+        pulsioximeter_bpm_digits[0]               = digito[2];
     }
     else if (digito[174] != 0 && digito[181] == 0) {
-        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[179], digito[59]);
-        pulsioximeter_bpm               = digits_to_int(digito[50], digito[10], digito[2]);
+        pulsioximeter_oxygen_saturation_digits[1] = digito[179];
+        pulsioximeter_oxygen_saturation_digits[0] = digito[59];
+        pulsioximeter_bpm_digits[2]               = digito[50];
+        pulsioximeter_bpm_digits[1]               = digito[10];
+        pulsioximeter_bpm_digits[0]               = digito[2];
     }
     else {
-        pulsioximeter_oxygen_saturation = digits_to_int(0, digito[179], digito[59]);
-        pulsioximeter_bpm               = digits_to_int(digito[50], digito[10], digito[2]);
+        pulsioximeter_oxygen_saturation_digits[1] = digito[179];
+        pulsioximeter_oxygen_saturation_digits[0] = digito[59];
+        pulsioximeter_bpm_digits[2]               = digito[50];
+        pulsioximeter_bpm_digits[1]               = digito[10];
+        pulsioximeter_bpm_digits[0]               = digito[2];
     }
 }
 

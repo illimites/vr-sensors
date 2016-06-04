@@ -18,9 +18,25 @@ struct Settings {
 };
 
 
+void print_digits(ostream & output, const int * digits, int num_digits) {
+    assert(num_digits >= 0);
+
+    for (int i = num_digits - 1; i >= 0; --i) {
+        assert(0 <= digits[i] <= 9 || digits[i] == -1);
+
+        if (digits[i] == -1)
+            output << "?";
+        else
+            output << digits[i];
+    }
+}
+
+
 void print_readings(const SensorReadings & readings) {
     cout << "system        | timestamp                = "    << readings.timestamp.tv_sec << "." << setfill('0') << setw(9) << readings.timestamp.tv_nsec << " ns" << endl;
-    cout << "pulsioximeter | PRbpm                    = "    << readings.bpm << endl;
+    cout << "pulsioximeter | PRbpm                    = "    << readings.bpm << " (";
+    print_digits(cout, readings.bpm_digits, 3);
+    cout << ")" << endl;
     cout << "ECG           | ECG                      = "    << readings.ecg << endl;
     cout << "galvanic      | Skin conductance voltage = "    << readings.conductance_voltage << " V" << endl;
     cout << "==============================================" << endl;
@@ -30,6 +46,9 @@ void print_readings(const SensorReadings & readings) {
 void log_header(ofstream & log) {
     log << "timestamp"       << ", ";
     log << "PRbpm"           << ", ";
+    log << "PRbpm digit 100" << ", ";
+    log << "PRbpm digit 10"  << ", ";
+    log << "PRbpm digit 1"   << ", ";
     log << "ECG"             << ", ";
     log << "Skin conductance voltage";
     log << endl;
@@ -39,6 +58,9 @@ void log_header(ofstream & log) {
 void log_readings(ofstream & log, const SensorReadings & readings) {
     log << readings.timestamp.tv_sec << "." << setfill('0') << setw(9) << readings.timestamp.tv_nsec << ", ";
     log << readings.bpm               << ", ";
+    log << readings.bpm_digits[2]     << ", ";
+    log << readings.bpm_digits[1]     << ", ";
+    log << readings.bpm_digits[0]     << ", ";
     log << readings.ecg               << ", ";
     log << readings.conductance_voltage;
     log << endl;
