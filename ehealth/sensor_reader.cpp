@@ -11,10 +11,7 @@ using namespace std;
 struct SensorReadings {
     timespec timestamp;
     int      bpm;
-    int      oxygen_saturation;
     float    ecg;
-    float    conductance;
-    float    resistance;
     float    conductance_voltage;
 };
 
@@ -50,10 +47,7 @@ SensorReadings read_sensors() {
 
     clock_gettime(CLOCK_MONOTONIC, &readings.timestamp);
     readings.bpm                 = eHealth.getBPM();
-    readings.oxygen_saturation   = eHealth.getOxygenSaturation();
     readings.ecg                 = eHealth.getECG();
-    readings.conductance         = eHealth.getSkinConductance();
-    readings.resistance          = eHealth.getSkinResistance();
     readings.conductance_voltage = eHealth.getSkinConductanceVoltage();
 
     return readings;
@@ -63,22 +57,16 @@ SensorReadings read_sensors() {
 void print_readings(const SensorReadings & readings) {
     cout << "system        | timestamp                = "    << readings.timestamp.tv_sec << "." << setfill('0') << setw(9) << readings.timestamp.tv_nsec << " ns" << endl;
     cout << "pulsioximeter | PRbpm                    = "    << readings.bpm << endl;
-    cout << "pulsioximeter | Oxygen saturation (SPo2) = "    << readings.oxygen_saturation << endl;
     cout << "ECG           | ECG                      = "    << readings.ecg << endl;
-    cout << "galvanic      | Skin conductance         = "    << readings.conductance << endl;
-    cout << "galvanic      | Skin resistance          = "    << readings.resistance << endl;
     cout << "galvanic      | Skin conductance voltage = "    << readings.conductance_voltage << " V" << endl;
     cout << "==============================================" << endl;
 }
 
 
 void log_header(ofstream & log) {
-    log << "timestamp"                 << ", ";
-    log << "PRbpm"                     << ", ";
-    log << "Oxygen saturation (SPo2)"  << ", ";
-    log << "ECG"                       << ", ";
-    log << "Skin conductance"          << ", ";
-    log << "Skin resistance"           << ", ";
+    log << "timestamp" << ", ";
+    log << "PRbpm"     << ", ";
+    log << "ECG"       << ", ";
     log << "Skin conductance voltage";
     log << endl;
 }
@@ -87,10 +75,7 @@ void log_header(ofstream & log) {
 void log_readings(ofstream & log, const SensorReadings & readings) {
     log << readings.timestamp.tv_sec << "." << setfill('0') << setw(9) << readings.timestamp.tv_nsec << ", ";
     log << readings.bpm               << ", ";
-    log << readings.oxygen_saturation << ", ";
     log << readings.ecg               << ", ";
-    log << readings.conductance       << ", ";
-    log << readings.resistance        << ", ";
     log << readings.conductance_voltage;
     log << endl;
 }
