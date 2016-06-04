@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <sys/time.h>
+#include <time.h>
 
 using namespace std;
 
@@ -133,14 +134,31 @@ int main (int argc, char *argv[]){
         log_header(log_file);
     }
 
+    // nanosleep() could be off by somewhere around 10-100 microseconds due to system overhead so there's no reason to sleep less than that.
+    // We need microsecond accuracy so sleeping 1/10 of a microsecond seems about right.
+    timespec nanosleep_interval;
+    nanosleep_interval.tv_sec  = 0;
+    nanosleep_interval.tv_nsec = 100000;
+
     do {
+        timespec last_measurement_time;
+        clock_gettime(CLOCK_MONOTONIC, &last_measurement_time);
+
         SensorReadings readings = read_sensors();
 
         // Print and log stuff. If log file name has not been specified, printing to the screen is enough.
         print_readings(readings);
         if (settings.log_path != "")
             log_readings(log_file, readings);
-        delay(settings.measurement_interval);
+
+        // Sleep in short intervals until the required measurement_interval is reached.
+        // But don't sleep if not necessary. In particular the interval can be zero.
+        timespec current_time;
+        clock_gettime(CLOCK_MONOTONIC, &current_time);
+        while ((current_time.tv_sec - last_measurement_time.tv_sec) * 1000 + (current_time.tv_nsec - last_measurement_time.tv_nsec) / 1000000 < settings.measurement_interval) {
+            nanosleep(&nanosleep_interval, NULL);
+            clock_gettime(CLOCK_MONOTONIC, &current_time);
+        }
     } while (true);
 
     if (settings.log_path != "")
@@ -148,4 +166,3 @@ int main (int argc, char *argv[]){
 
     return 0;
 }
-
