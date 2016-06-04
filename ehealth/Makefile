@@ -1,4 +1,5 @@
 DOWNLOAD_DIR = download
+BIN_DIR      = bin
 ARDUPI_DIR   = arduPi
 EHEALTH_DIR  = eHealth
 BCM_DIR      = $(ARDUPI_DIR)/bcm2835-1.46
@@ -11,7 +12,15 @@ ARDUPI_URL  = https://www.cooking-hacks.com/media/cooking/images/documentation/r
 # FIXME: arduPi.cpp won't compile on ArchLinux without -fpermissive
 CPP_FLAGS = -fpermissive
 
+PROGRAMS = $(BIN_DIR)/sensor_reader
+
 .PHONY: clean distclean
+
+all: $(PROGRAMS)
+
+$(BIN_DIR)/sensor_reader: $(ARDUPI_DIR)/arduPi.o $(EHEALTH_DIR)/eHealth.o sensor_reader.o
+	mkdir -p $(BIN_DIR)
+	g++ -o $@ $^ -L "$(BCM_DIR)/src" -l bcm2835 -l rt -lpthread $(CPP_FLAGS)
 
 .cpp.o:
 	g++ -o $@ -c $< -I"$(EHEALTH_DIR)" -I "$(ARDUPI_DIR)" -I "$(BCM_DIR)/src" $(CPP_FLAGS)
@@ -44,4 +53,4 @@ clean:
 	rm -rf $(DOWNLOAD_DIR) *.o
 
 distclean: clean
-	rm -rf $(ARDUPI_DIR) $(EHEALTH_DIR)
+	rm -rf $(ARDUPI_DIR) $(EHEALTH_DIR) $(BIN_DIR)
