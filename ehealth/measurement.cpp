@@ -122,35 +122,39 @@ void update_pulsioximeter_globals()
         delayMicroseconds(43);
     }
 
-    if (digito[142] != 0 && digito[181] == 0) {
+    // NOTE: A digit being zero in the original code could mean either that it was actually zero
+    // or that it was just malformed (the code did not discern between these two).
+    // I'm assuming that the comparisons with zero are being done to avoid those malformed digits so
+    // I'm now comparing with -1 instead (that's what is returned now when the digit is malformed).
+    if (digito[142] != -1 && digito[181] == -1) {
         pulsioximeter_oxygen_saturation_digits[1] = digito[142];
         pulsioximeter_oxygen_saturation_digits[0] = digito[59];
         pulsioximeter_bpm_digits[2]               = digito[137];
         pulsioximeter_bpm_digits[1]               = digito[10];
         pulsioximeter_bpm_digits[0]               = digito[2];
     }
-    else if (digito[136] != 0 && digito[62] == 0) {
+    else if (digito[136] != -1 && digito[62] == -1) {
         pulsioximeter_oxygen_saturation_digits[1] = digito[179];
         pulsioximeter_oxygen_saturation_digits[0] = digito[136];
         pulsioximeter_bpm_digits[2]               = digito[127];
         pulsioximeter_bpm_digits[1]               = digito[10];
         pulsioximeter_bpm_digits[0]               = digito[2];
     }
-    else if (digito[145] != 0 && digito[62] == 0) {
+    else if (digito[145] != -1 && digito[62] == -1) {
         pulsioximeter_oxygen_saturation_digits[1] = digito[181];
         pulsioximeter_oxygen_saturation_digits[0] = digito[142];
         pulsioximeter_bpm_digits[2]               = digito[50];
         pulsioximeter_bpm_digits[1]               = digito[10];
         pulsioximeter_bpm_digits[0]               = digito[2];
     }
-    else if (digito[53] != 0 && digito[62] == 0) {
+    else if (digito[53] != -1 && digito[62] == -1) {
         pulsioximeter_oxygen_saturation_digits[1] = digito[179];
         pulsioximeter_oxygen_saturation_digits[0] = digito[53];
         pulsioximeter_bpm_digits[2]               = digito[41];
         pulsioximeter_bpm_digits[1]               = digito[10];
         pulsioximeter_bpm_digits[0]               = digito[2];
     }
-    else if (digito[174] != 0 && digito[181] == 0) {
+    else if (digito[174] != -1 && digito[181] == -1) {
         pulsioximeter_oxygen_saturation_digits[1] = digito[179];
         pulsioximeter_oxygen_saturation_digits[0] = digito[59];
         pulsioximeter_bpm_digits[2]               = digito[50];
